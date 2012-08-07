@@ -9,6 +9,8 @@ var fs = require('fs')
   , spawn = require('child_process').spawn
   , clearScreen = /true|yes|on|1/i.test(process.env.NODE_DEV_CLEARSCREEN)
   , wrapper = module    // Save a reference to this module
+  , uncaughtException = false
+
 
 // Remove wrapper.js from the argv array
 process.argv.splice(1, 1)
@@ -46,7 +48,14 @@ function notify(title, msg, level) {
  */
 function triggerRestart() {
   process.removeListener('exit', checkExitCode)
-  process.exit(101)
+  if( !uncaughtException ){
+    process.kill(process.pid, 'SIGTERM');
+    setTimeout(function(){
+      process.exit(101);
+    }, 10*1000);
+  }else{
+    process.exit(101)
+  }
 }
 
 /**
@@ -168,6 +177,7 @@ patch(vm, 'runInContext', 2)
 // Error handler that displays a notification and logs the stack to stderr:
 process.on('uncaughtException', function(err) {
  notify(err.name, err.message, 'error')
+ uncaughtException = true;
  console.error(err.stack || err)
 })
 
