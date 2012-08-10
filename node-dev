@@ -4,6 +4,7 @@ var spawn = require('child_process').spawn
   , fs = require('fs')
   , env = process.env
   , node = process.argv[0]
+  , path = require('path')
 
 // Pass the location of the node-dev script to the child process
 env.NODE_DEV = process.argv[1]
@@ -28,7 +29,18 @@ for (var i=0; i < args.length; i++) {
   }
 }
 
+function incrementBuildNumber(){
+  var f = path.resolve(args[1], '..', 'buildNumber.txt')
+  if(!fs.existsSync(f))return;
+
+  var v = fs.readFileSync(f, 'utf-8');
+  var n = parseInt(v)+1;
+  if(! n )n= 1;
+  fs.writeFileSync(f, n, 'utf-8');
+}
+
 function start() {
+  incrementBuildNumber(); 
   var child = spawn(node, args, {
     cwd: process.cwd(),
     env: env,
